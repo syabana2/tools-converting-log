@@ -5,7 +5,7 @@ import re
 
 
 class LogElasticConverterService:
-    """ a class used to convert elasticsearch log.
+    """ a class used to convert elasticsearch log to text or json.
     """
 
     def __init__(self, log_file_path: str, type_file: str):

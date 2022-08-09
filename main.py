@@ -6,12 +6,16 @@ import argparse
 import sys
 
 
-def main(args: dict):
+def main():
     """ main function for process converting log.
-
-    Args:
-        args (dict): data from argument which type from terminal.
     """
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("log_file_path", type=str, help="location filename log, example=var/log/elasticsearch.log")
+    ap.add_argument("-o", "--output-file", required=False, nargs="?", const="output.txt", default="output.txt", type=str, help="output path file, default current path.")
+    ap.add_argument("-t", "--type-file", required=False, nargs="?", const="text", default="text", type=str, help="type output file, default type Text. option: json|text")
+    args = vars(ap.parse_args())
+
     if exists(args["log_file_path"]):
         if args["type_file"] not in ("json", "text"):
             args["type_file"] == "text"
@@ -35,12 +39,4 @@ def main(args: dict):
 
 
 if __name__ == "__main__":
-    """ this is for get arguments from user.
-    """
-    ap = argparse.ArgumentParser()
-    ap.add_argument("log_file_path", type=str, help="location filename log, example=var/log/elasticsearch.log")
-    ap.add_argument("-o", "--output-file", required=False, nargs="?", const="output.txt", default="output.txt", type=str, help="output path file, default current path.")
-    ap.add_argument("-t", "--type-file", required=False, nargs="?", const="text", default="text", type=str, help="type output file, default type Text. option: json|text")
-    args = vars(ap.parse_args())
-
-    main(args)
+    main()
