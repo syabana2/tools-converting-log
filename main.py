@@ -6,17 +6,24 @@ import argparse
 import sys
 
 
-def main(args):
+def main(args: dict):
+    """ main function for process converting log.
+
+    Args:
+        args (dict): data from argument which type from terminal.
+    """
     if exists(args["log_file_path"]):
-        log_converter_svc = LogElasticConverterService(args["log_file_path"])
+        if args["type_file"] not in ("json", "text"):
+            args["type_file"] == "text"
+
+        if args["type_file"] == "json" and args["output_file"] == "output.txt":
+            args["output_file"] = "output.json"
+
+        log_converter_svc = LogElasticConverterService(args["log_file_path"], args["type_file"])
         files_log_svc = FilesLogService(args["type_file"], args["output_file"])
         files_log_svc.create_output_file()
 
-        if args["type_file"] == "json":
-            body_logs = log_converter_svc.json_format()
-
-        else:
-            body_logs = log_converter_svc.text_format()
+        body_logs = log_converter_svc.process()
 
         files_log_svc.save(body_logs)
 
@@ -28,6 +35,8 @@ def main(args):
 
 
 if __name__ == "__main__":
+    """ this is for get arguments from user.
+    """
     ap = argparse.ArgumentParser()
     ap.add_argument("log_file_path", type=str, help="location filename log, example=var/log/elasticsearch.log")
     ap.add_argument("-o", "--output-file", required=False, nargs="?", const="output.txt", default="output.txt", type=str, help="output path file, default current path.")
