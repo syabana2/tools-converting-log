@@ -1,19 +1,11 @@
-from tkinter.messagebox import NO
 from templates_format import text
 
-import json
 import re
 
 
 class LogElasticConverterService:
-    def __init__(self, log_file_path: str, type: str, output: str):
+    def __init__(self, log_file_path: str):
         self.log_file_path = log_file_path
-        self.type = type
-
-        if self.type == "json" and output == "output.txt":
-            self.output = "output.json"
-        else:
-            self.output = output
 
     def get_details_log_elastic(self, log_file_line: str, log_id: str) -> dict:
         log_elastic = {
@@ -40,12 +32,12 @@ class LogElasticConverterService:
 
         return log_elastic
 
-    def json_format(self) -> None:
+    def json_format(self) -> dict:
         with open(self.log_file_path, mode='r') as log_file:
             log_file_lines = log_file.readlines()
             error_status = True
             log_id = 1
-            logs = []
+            body_logs = []
             try:
                 for log_file_line in log_file_lines:
                     log_elastic = self.get_details_log_elastic(log_file_line, log_id)
@@ -53,52 +45,53 @@ class LogElasticConverterService:
                         error_status = True
 
                         del log_elastic["status"]
-                        logs.append(log_elastic)
+                        body_logs.append(log_elastic)
 
                         log_id = log_id + 1
                     else:
                         if error_status:
-                            logs[-1].update({"error_message": log_file_line.strip()})
+                            body_logs[-1].update({"error_message": log_file_line.strip()})
 
                         error_status = False
+
+                return body_logs
 
             except Exception as e:
                 raise(e)
 
-        with open(self.output, "w") as output_file:
-            json.dump(logs, output_file)
-
-    def text_format(self) -> None:
+    def text_format(self) -> str:
         with open(self.log_file_path, 'r') as log_file:
             log_file_lines = log_file.readlines()
             error_status = True
             log_id = 1
 
             try:
-                with open(self.output, mode="w") as output_file:
-                    output_file.write(text.line())
-                    for log_file_line in log_file_lines:
-                        log_elastic = self.get_details_log_elastic(log_file_line, log_id)
-                        if log_elastic["status"]:
-                            error_status = True
-                            output_file.write(f"id: {log_elastic['id']}\n")
-                            output_file.write(f"timestamp: {log_elastic['timestamp']}\n")
-                            output_file.write(f"level: {log_elastic['level']}\n")
-                            output_file.write(f"component: {log_elastic['component']}\n")
-                            output_file.write(f"cluster_name: {log_elastic['cluster_name']}\n")
-                            output_file.write(f"message: {log_elastic['message']}\n")
+                body_logs = ""
+                body_logs += text.line()
+                for log_file_line in log_file_lines:
+                    log_elastic = self.get_details_log_elastic(log_file_line, log_id)
+                    if log_elastic["status"]:
+                        error_status = True
+                        body_logs += f"id: {log_elastic['id']}\n"
+                        body_logs += f"timestamp: {log_elastic['timestamp']}\n"
+                        body_logs += f"level: {log_elastic['level']}\n"
+                        body_logs += f"component: {log_elastic['component']}\n"
+                        body_logs += f"cluster_name: {log_elastic['cluster_name']}\n"
+                        body_logs += f"message: {log_elastic['message']}\n"
 
-                            if log_elastic["level"] not in ("WARN", "DEBUG"):
-                                output_file.write("error_message:\n")
-                                output_file.write(text.line())
+                        if log_elastic["level"] not in ("WARN", "DEBUG"):
+                            body_logs += "error_message:\n"
+                            body_logs += text.line()
 
-                            log_id = log_id+1
-                        else:
-                            if error_status:
-                                output_file.write(f"error_message: {log_file_line.strip()}\n")
-                                output_file.write(text.line())
+                        log_id = log_id+1
+                    else:
+                        if error_status:
+                            body_logs += f"error_message: {log_file_line.strip()}\n"
+                            body_logs += text.line()
 
-                            error_status = False
+                        error_status = False
+
+                return body_logs
 
             except Exception as e:
                 raise(e)
